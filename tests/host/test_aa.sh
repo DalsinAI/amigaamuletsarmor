@@ -33,7 +33,7 @@ m68k*) X="-U_FILE_OFFSET_BITS -D_FILE_OFFSET_BITS=32 -U_TIME_BITS" ;;
 esac
 DEFS="-DWIN32=1 -DTARGET_UNIX=1 -DWIN_IPX=0 -DNO_ASSEMBLY=1 -Dcdecl= -D_cdecl= -D__cdecl= -D__fastcall="
 INC="-I$ROOT/amiga/include -I$ROOT/amiga -iquote $AA/src"
-UP="-x c -std=gnu99 -w -fpermissive -O1 -funsigned-char -fno-strict-aliasing $DEFS $INC $X"
+UP="-x c -std=gnu99 -w -fpermissive -include $ROOT/amiga/aa_pre.h -O1 -funsigned-char -fno-strict-aliasing $DEFS $INC $X"
 MINE="-std=gnu99 -Wall -Werror -Wno-unknown-pragmas -O1 -funsigned-char -fno-strict-aliasing $DEFS $INC $X"
 for f in aa_main aa_sdl aa_keys aa_endian aa_files; do $CC $MINE -c -o "$T/$f.o" "$ROOT/amiga/$f.c"; done
 $CC $MINE -c -o "$T/aa_host.o" "$HERE/aa_host.c"
