@@ -13,6 +13,11 @@
  * GPL-3.0-or-later, like Amulets & Armor. Copyright (c) 2026 AmiCradle Team.
  */
 #include "aa_plat.h"
+/* the Amiga compiler has its own __interrupt, __far and __near; the
+ * game's OPTIONS.H makes them nothing, as for Unix */
+#undef __interrupt
+#undef __far
+#undef __near
 #include "general.h"
 #include "graphics.h"
 #include "keyboard.h"
