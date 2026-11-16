@@ -1,0 +1,15 @@
+{
+  "name": "Amulets & Armor",
+  "version": "1.05.03a-gfos1",
+  "drawer": "AmuletsArmor",
+  "program": "AmuletsArmor",
+  "cpu": "68040",
+  "fpu": false,
+  "space": 40000000,
+  "modules": [],
+  "libraries": ["acgame.library"],
+  "keep": ["config.ini", "S0000000"],
+  "parent": "Work:Games",
+  "badge": "icons/art/amuletsarmor.png",
+  "script": "Install-AmuletsArmor"
+}

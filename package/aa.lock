@@ -1,0 +1,9 @@
+# The upstream Amulets & Armor the port builds: ExiguusEntertainment/
+# AmuletsArmor at this commit (the 1997 game, source and data, GPL-3.0),
+# fetched by package/prepare-source.sh and never kept in this repository.
+AA_GIT=https://github.com/ExiguusEntertainment/AmuletsArmor
+AA_COMMIT=848248804c70339b87d682cb4999ed3b35ca84ca
+AA_VERSION=1.05.03a
+PORT_VERSION=1.05.03a-gfos1
+# DalsinAI/acgame: acgame.library and its stubs, built with the game
+ACGAME_REF=05f72b98d05044b149be315400bb6e196b42799d

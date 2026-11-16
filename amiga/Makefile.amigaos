@@ -1,0 +1,91 @@
+# Amulets & Armor for GFOS (AmigaOS 3.2 with GFOpenUp), 68040/68060: the
+# 1997 game on ACGame's 8-bit screen (acgame.library, opened at run time
+# through the libacgame.a stubs), no SDL and no GFOpenGPU, built soft float.
+#
+#   make -f amiga/Makefile.amigaos -j4 AA=/path/to/prepared \
+#        ACGAME=/path/to/acgame ACGAMELIB=/path/to/acgame-out [STOVE=...]
+#
+# AA is what package/prepare-source.sh makes: src/ (upstream's C, lower
+# case, patched) and data/ (its resource files, maps and forms). ACGAME is
+# DalsinAI/acgame (its headers), ACGAMELIB its build (libacgame.a, the
+# stubs that open acgame.library, and acgame.library itself).
+#
+# Upstream is built as its Unix (SDL 1.2) target: amiga/include/sdl.h and
+# amiga/aa_sdl.c give it the SDL calls it makes (the keyboard, the mouse,
+# the sound callback), amiga/aa_main.c the frame and mouse calls that
+# Build/Windows/VC2013/AA/main.c and direct.cpp give it, amiga/aa_endian.c
+# its little-endian data in the 68040's order, amiga/aa_files.c its DOS
+# paths (\ to /). Not built: debugbor.c (Borland's debugger), tosdata.c
+# (a data tool), the network drivers (WIN_IPX=0: one player).
+#
+# Output: build/amigaos/AmuletsArmor/ (the drawer: the program, its data,
+# Libs/acgame.library, ReadMe, the licence, the icons) and
+# build/amigaos/AmuletsArmor.info and Install-AmuletsArmor beside it.
+
+AA        ?= ../aa-prepared
+ACGAME    ?= ../acgame
+ACGAMELIB ?= $(ACGAME)/build-amiga
+STOVE     ?= $(HOME)/AmiCradle/stoves/os32-gcc16-open6
+PREFIX    ?= $(STOVE)/prefix
+CC        = $(PREFIX)/bin/m68k-amigaos-gcc
+CPU       ?= -m68040 -msoft-float
+# -fno-tree-loop-distribute-patterns: GCC 16's loop miscompile.
+OPT       ?= -O2 -fomit-frame-pointer -fno-tree-loop-distribute-patterns
+
+DEFS      = -DWIN32=1 -DTARGET_UNIX=1 -DWIN_IPX=0 -DNO_ASSEMBLY=1 \
+            -Dcdecl= -D_cdecl= -D__cdecl= -D__fastcall=
+# upstream's memory.h and form.h are its own: -iquote keeps them from
+# hiding the system's
+INC       = -Iamiga/include -Iamiga -iquote $(AA)/src -I$(ACGAME)/include
+# Upstream is 1990s Watcom and Visual C: its warnings are upstream's (-w);
+# its char is unsigned, and its pointers alias freely.
+UPFLAGS   = -noixemul $(OPT) $(CPU) -std=gnu99 -w -funsigned-char -fno-strict-aliasing $(DEFS) $(INC)
+CFLAGS    = -noixemul $(OPT) $(CPU) -std=gnu99 -Wall -Werror -Wno-unknown-pragmas \
+            -funsigned-char -fno-strict-aliasing $(DEFS) $(INC)
+LDFLAGS   = -noixemul $(CPU)
+LIBS      = $(ACGAMELIB)/libacgame.a -lm
+
+BUILD     = build/amigaos
+OBJ       = $(BUILD)/obj
+DRAWER    = $(BUILD)/AmuletsArmor
+
+UPSRC     = $(filter-out debugbor tosdata,$(basename $(notdir $(wildcard $(AA)/src/*.c))))
+OURS      = aa_main aa_sdl aa_keys aa_endian aa_files aa_acgame
+OBJS      = $(UPSRC:%=$(OBJ)/up/%.o) $(OURS:%=$(OBJ)/%.o)
+HDRS      = $(wildcard amiga/*.h amiga/include/*.h)
+
+all: program package
+
+program: $(OBJ)/AmuletsArmor
+
+$(OBJ)/up/%.o: $(AA)/src/%.c $(HDRS)
+	@mkdir -p $(dir $@)
+	$(CC) $(UPFLAGS) -c -o $@ $<
+
+$(OBJ)/%.o: amiga/%.c $(HDRS)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(OBJ)/AmuletsArmor: $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+package: program AMIGA_PORT.md
+	rm -rf $(DRAWER)
+	mkdir -p $(DRAWER)/Libs
+	cp $(OBJ)/AmuletsArmor $(DRAWER)/AmuletsArmor
+	cp amiga/icons/AmuletsArmor.info $(DRAWER)/AmuletsArmor.info
+	cp -R $(AA)/data/. $(DRAWER)/
+	rm -f $(DRAWER)/S0000000/.gitignore
+	cp $(ACGAMELIB)/acgame.library $(DRAWER)/Libs/
+	cp AMIGA_PORT.md $(DRAWER)/ReadMe
+	cp amiga/icons/ReadMe.info $(DRAWER)/ReadMe.info
+	cp $(AA)/upstream/LICENSE $(DRAWER)/LICENSE.txt
+	cp amiga/icons/ReadMe.info $(DRAWER)/LICENSE.txt.info
+	cp amiga/icons/AmuletsArmor-drawer.info $(BUILD)/AmuletsArmor.info
+	cp amiga/Install-AmuletsArmor amiga/Install-AmuletsArmor.info $(BUILD)/
+
+clean:
+	rm -rf $(BUILD)
+
+.PHONY: all program package clean
+.SECONDARY:
