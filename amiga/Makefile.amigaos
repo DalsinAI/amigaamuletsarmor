@@ -37,9 +37,10 @@ DEFS      = -DWIN32=1 -DTARGET_UNIX=1 -DWIN_IPX=0 -DNO_ASSEMBLY=1 \
 # upstream's memory.h and form.h are its own: -iquote keeps them from
 # hiding the system's
 INC       = -Iamiga/include -Iamiga -iquote $(AA)/src -I$(ACGAME)/include
-# Upstream is 1990s Watcom and Visual C: its warnings are upstream's (-w);
-# its char is unsigned, and its pointers alias freely.
-UPFLAGS   = -noixemul $(OPT) $(CPU) -std=gnu99 -w -funsigned-char -fno-strict-aliasing $(DEFS) $(INC)
+# Upstream is 1990s Watcom and Visual C: its warnings are upstream's (-w),
+# and -fpermissive keeps GCC 14 and later from making its old C (calls with
+# no prototype) errors; its char is unsigned, and its pointers alias freely.
+UPFLAGS   = -noixemul $(OPT) $(CPU) -std=gnu99 -w -fpermissive -funsigned-char -fno-strict-aliasing $(DEFS) $(INC)
 CFLAGS    = -noixemul $(OPT) $(CPU) -std=gnu99 -Wall -Werror -Wno-unknown-pragmas \
             -funsigned-char -fno-strict-aliasing $(DEFS) $(INC)
 LDFLAGS   = -noixemul $(CPU)
