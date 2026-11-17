@@ -36,9 +36,9 @@ RTG (and GFOpenGfx where it is installed) or AGA. It needs no SDL and no
 GFOpenGPU. It ships acgame.library in the drawer's Libs/. About 40 MB of
 disk.
 
-Sound: not yet. The game mixes its effects as it plays, but ACGame has no
-sound output yet, so nothing is heard. The music (AAMUSIC, 71 MB of
-recorded CD audio) is not shipped.
+Sound: the game's effects, mixed as it plays at 11025 Hz, through
+ACGame's sound (AHI, or Paula where AHI is not installed). The music
+(AAMUSIC, 71 MB of recorded CD audio) is not shipped.
 
 One player: the network game (IPX and modem) is not built.
 

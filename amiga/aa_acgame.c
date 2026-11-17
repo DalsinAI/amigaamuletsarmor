@@ -151,7 +151,7 @@ void aa_plat_input(struct aa_input *in)
 
 void aa_plat_audio(const short *samples, unsigned frames, unsigned rate)
 {
-    /* ACGame has no sound output yet (it answers -1): nothing is heard */
+    /* ACGame 1.3: queued for AHI (or Paula); -1 where no sound can open */
     acgame_platform_audio_s16stereo((const int16_t *)samples, frames, rate);
 }
 

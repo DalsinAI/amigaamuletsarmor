@@ -66,7 +66,7 @@ python3 "$ROOT/tools/pack_dist.py" --dist "$DIST" --name "$NAME" --out "$OUT"
 
 # 6. the GFOpenUp part
 sh "$ROOT/package/write-part.sh" "$DIST/$NAME" "$OUT/Parts/$NAME" "$NAME" "$PORT_VERSION" \
-    "Amulets & Armor (1997): a first-person fantasy RPG, on ACGame (no sound yet)"
+    "Amulets & Armor (1997): a first-person fantasy RPG, on ACGame"
 echo "part: $(grep -c '^copy' "$OUT/Parts/$NAME/Part") files, $(du -sk "$OUT/Parts/$NAME" | cut -f1) KB"
 ls -l "$DIST/$NAME/$NAME"
 echo "total: $(( $(date +%s) - t0 )) s"

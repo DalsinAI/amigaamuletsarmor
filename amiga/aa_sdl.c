@@ -10,8 +10,8 @@
  * thread as time passes (aa_sdl_audio_pump, from every screen update and
  * wait) instead of from an audio thread, at 11025 Hz rather than the
  * 44100 the game asks for (the game takes the rate it is given), and its
- * output goes to aa_plat_audio. So sounds start, run and end on time even
- * where nothing can be heard (ACGame has no sound output yet).
+ * output goes to aa_plat_audio (ACGame's sound). So sounds start, run and
+ * end on time, also where no sound output can be opened.
  *
  * GPL-3.0-or-later, like Amulets & Armor. Copyright (c) 2026 AmiCradle Team.
  */

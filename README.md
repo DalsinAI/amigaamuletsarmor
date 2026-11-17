@@ -8,9 +8,9 @@ GFOpenGPU. Installed as a GFOpenUp part: `SYS:Games/AmuletsArmor`.
 
 Status: builds and plays on a PC and on an emulated 68040 (QEMU) from the
 same patched sources, frame for frame the same (see Tests); the Amiga
-build is made by the stove, not yet run in a lab. No sound is heard yet
-(ACGame has no sound output); the CD music is not shipped; one player
-only.
+build is made by the stove, not yet run in a lab. The sound effects
+play through ACGame 1.3 (AHI, else Paula); the CD music is not shipped;
+one player only.
 
 AMIGA_PORT.md is the drawer's ReadMe: the keys, what it needs, and how the
 port works.
