@@ -1,0 +1,270 @@
+diff --git a/3d_io.c b/3d_io.c
+index f08d9b1..288da59 100644
+--- a/3d_io.c
++++ b/3d_io.c
+@@ -186,6 +186,7 @@ T_void View3dLoadMap(T_byte8 *MapName)
+     DebugCheck(file != FILE_BAD) ;
+ 
+     FileRead(file, &header, sizeof(header)) ;
++    aa_fix_wad_header(&header) ;
+ 
+     if (strnicmp(header.signature, "IWAD", 4) == 0)  {
+ //puts("Reading IWAD file.\n") ;
+@@ -212,6 +213,7 @@ puts("Not a valid file!\n") ;
+     while (entriesRead < 11)  {
+         FileSeek(file, entryOffset) ;
+         FileRead(file, &directory, sizeof(T_directoryEntry)) ;
++        aa_fix_wad_entry(&directory) ;
+ 
+         if (strnicmp(directory.name, "BLOCKMAP", 8) == 0)
+             ILoadBlockMap(file, &directory) ;
+@@ -237,6 +239,7 @@ puts("Not a valid file!\n") ;
+         PromptStatusBarUpdate (25+(entriesRead*3));
+         FileSeek(file, entryOffset) ;
+         FileRead(file, &directory, sizeof(T_directoryEntry)) ;
++        aa_fix_wad_entry(&directory) ;
+ 
+         if (strnicmp(directory.name, "THINGS", 6)==0)
+             ILoadObjects(file, &directory) ;
+@@ -386,6 +389,7 @@ static T_void ILoadObjects(
+     /* Look for the player #1 start. */
+     for (i=0; i<num; i++)  {
+         FileRead(file, &objData, sizeof(T_3dObjectInFile)) ;
++        aa_fix_map_lump("THINGS", &objData, sizeof(T_3dObjectInFile)) ;
+ 
+ //printf("%d) ObjType: %05d\n", i, objData.objectType) ;
+ //        color = objData.objectType>>12 ;
+@@ -526,6 +530,7 @@ static T_void ILoadSegs(
+     /* Seek and read in the segments. */
+     FileSeek(file, p_dir->foffset) ;
+     FileRead(file, G_3dSegArray, p_dir->size) ;
++    aa_fix_map_lump("SEGS", G_3dSegArray, p_dir->size) ;
+ 
+ //printf("SEGMENTS : %d\n", G_Num3dSegs) ;
+ 
+@@ -558,6 +563,7 @@ static T_void ILoadSides(
+     /* Seek and read in the sides. */
+     FileSeek(file, p_dir->foffset) ;
+     FileRead(file, G_3dSideArray, p_dir->size) ;
++    aa_fix_map_lump("SIDEDEFS", G_3dSideArray, p_dir->size) ;
+ 
+ //printf("SIDEDEFS : %d\n", G_Num3dSides) ;
+ 
+@@ -590,6 +596,7 @@ static T_void ILoadLines(
+     /* Seek and read in the lines. */
+     FileSeek(file, p_dir->foffset) ;
+     FileRead(file, G_3dLineArray, p_dir->size) ;
++    aa_fix_map_lump("LINEDEFS", G_3dLineArray, p_dir->size) ;
+ 
+ //printf("LINEDEFS : %d\n", G_Num3dLines) ;
+     DebugEnd() ;
+@@ -634,6 +641,7 @@ static T_void ILoadNodes(
+     /* Seek and read in the nodes. */
+     FileSeek(file, p_dir->foffset) ;
+     FileRead(file, G_3dNodeArray, p_dir->size) ;
++    aa_fix_map_lump("NODES", G_3dNodeArray, p_dir->size) ;
+ 
+ //printf("NODES    : %d\n", G_Num3dNodes) ;
+     DebugEnd() ;
+@@ -667,6 +675,7 @@ static T_void ILoadSectors(
+     /* Seek and read in the nodes. */
+     FileSeek(file, p_dir->foffset) ;
+     FileRead(file, G_3dSectorArray, p_dir->size) ;
++    aa_fix_map_lump("SECTORS", G_3dSectorArray, p_dir->size) ;
+ 
+     G_3dSectorInfoArray =
+         (T_3dSectorInfo *)MemAlloc(G_Num3dSectors * sizeof(T_3dSectorInfo)) ;
+@@ -709,6 +718,7 @@ static T_void ILoadVertexes(
+     /* Seek and read in the nodes. */
+     FileSeek(file, p_dir->foffset) ;
+     FileRead(file, G_3dVertexArray, p_dir->size) ;
++    aa_fix_map_lump("VERTEXES", G_3dVertexArray, p_dir->size) ;
+ 
+ //printf("VERTEXES : %d\n", G_Num3dVertexes) ;
+     DebugEnd() ;
+@@ -741,6 +751,7 @@ static T_void ILoadSegmentSectors(
+     /* Seek and read in the nodes. */
+     FileSeek(file, p_dir->foffset) ;
+     FileRead(file, G_3dSegmentSectorArray, p_dir->size) ;
++    aa_fix_map_lump("SSECTORS", G_3dSegmentSectorArray, p_dir->size) ;
+ 
+ //printf("SSECTORS : %d\n", G_Num3dSSectors) ;
+     DebugEnd() ;
+@@ -865,6 +876,7 @@ static T_void ILoadBlockMap(
+     /* Seek and read in the nodes. */
+     FileSeek(file, p_dir->foffset) ;
+     FileRead(file, G_3dBlockMapArray, p_dir->size) ;
++    aa_fix_map_lump("BLOCKMAP", G_3dBlockMapArray, p_dir->size) ;
+ 
+ #ifndef NDEBUG
+ #if 0
+diff --git a/3d_trig.c b/3d_trig.c
+index 09b2ff7..50dbd8f 100644
+--- a/3d_trig.c
++++ b/3d_trig.c
+@@ -445,6 +445,14 @@ T_void MathInitialize(T_word32 screenWidth)
+         FileRead(fh, G_translucentTable, sizeof(G_translucentTable)) ;
+ //TAKE OUT        FileRead(fh, G_distanceTable, sizeof(G_distanceTable)) ;
+         FileClose(fh) ;
++#if AA_BIG_ENDIAN
++        /* GFOS port: MDAT.RES is little-endian */
++        aa_swap16(G_arcTanTable, sizeof(G_arcTanTable) / 2) ;
++        aa_swap32(G_cosTable, sizeof(G_cosTable) / 4) ;
++        aa_swap32(G_invCosTable, sizeof(G_invCosTable) / 4) ;
++        aa_swap32(G_sinTable, sizeof(G_sinTable) / 4) ;
++        aa_swap32(G_tanTable, sizeof(G_tanTable) / 4) ;
++#endif
+ /*
+         G_cosTable = (T_sword32 *)(((T_byte8 *)G_arcTanTable) +
+                       sizeof(T_word16) * 256 * 256) ;
+diff --git a/general.h b/general.h
+index cefc842..17e502f 100644
+--- a/general.h
++++ b/general.h
+@@ -136,4 +136,7 @@ typedef union {
+ 
+ #include "debug.h"
+ 
++/* GFOS port: DOS file names and little-endian data (amiga/aa_compat.h) */
++#include "aa_compat.h"
++
+ #endif
+diff --git a/inventor.c b/inventor.c
+index a1d8d19..e085ab3 100644
+--- a/inventor.c
++++ b/inventor.c
+@@ -1198,7 +1198,7 @@ T_inventoryItemStruct* InventoryTakeObject (E_inventoryType which, T_3dObject *i
+                  * Some legacy resources can surface a one-past-end data pointer
+                  * on 64-bit builds; if so, recover the true block start.
+                  */
+-                if ((descSize > 0) &&
++                if ((sizeof(T_void *) == 8) && (descSize > 0) &&
+                     ((((unsigned long)desc1) & (sizeof(T_void *) - 1)) != 0)) {
+                     T_byte8 *p_descAlt = desc1 - descSize;
+                     if ((((unsigned long)p_descAlt) & (sizeof(T_void *) - 1)) == 0)
+diff --git a/resource.c b/resource.c
+index 0bd6933..0c9f9b8 100644
+--- a/resource.c
++++ b/resource.c
+@@ -86,6 +86,42 @@ static T_resourceFile IFindOpenResource(T_byte8 *p_filename) ;
+ 
+ static T_void IDiscardEntries(T_resourceEntry *p_entry, T_word16 number) ;
+ 
++/* GFOS port: a block just read from a resource file, put in the
++ * machine's order by its path (amiga/aa_endian.c). The path is built from
++ * the directories the block is in. */
++static T_void IAAFixLoaded(T_resourceEntry *p_entry)
++{
++#if AA_BIG_ENDIAN
++    T_resourceEntry *chain[8] ;
++    T_resourceEntry *p = p_entry ;
++    char path[160] ;
++    int n = 0, i ;
++
++    while (p != NULL && n < 8)  {
++        T_resourceDirInfo *p_dir = (T_resourceDirInfo *)p->ownerDir ;
++        chain[n++] = p ;
++        if (p_dir == NULL || p_dir->ownerRes == RESOURCE_BAD)
++            break ;
++        p = (T_resourceEntry *)p_dir->ownerRes ;
++    }
++    path[0] = '\0' ;
++    for (i = n - 1; i >= 0; i--)  {
++        char name[15] ;
++        memcpy(name, chain[i]->p_resourceName, 14) ;
++        name[14] = '\0' ;
++        if (strlen(path) + strlen(name) + 2 < sizeof(path))  {
++            if (path[0])
++                strcat(path, "/") ;
++            strcat(path, name) ;
++        }
++    }
++    aa_fix_resource((const char *)G_resourceNames[p_entry->resourceFile],
++                    path, p_entry->p_data, p_entry->size) ;
++#else
++    (void)p_entry ;
++#endif
++}
++
+ #ifdef TARGET_UNIX
+ typedef struct {
+     T_byte8 resID[4]            PACK;
+@@ -130,6 +166,7 @@ static T_word16 ILoadResourceIndexUnix(
+ 
+     FileSeek(file, indexOffset) ;
+     FileRead(file, p_diskIndex, indexSize) ;
++    aa_fix_res_index(p_diskIndex, indexSize / sizeof(T_resourceEntryDisk32)) ;
+ 
+     entriesInFile = indexSize / sizeof(T_resourceEntryDisk32) ;
+     entriesToCopy = numEntries ;
+@@ -240,6 +277,7 @@ T_resourceFile ResourceOpen(T_byte8 *filename)
+ 
+         /* Now read in the resource file header. */
+         FileRead(file, &resourceHeader, sizeof(T_resourceFileHeader)) ;
++        aa_fix_res_header(&resourceHeader) ;
+ 
+         /* Check for the correct id */
+         DebugCheck(resourceHeader.uniqueID == RESOURCE_FILE_UNIQUE_ID) ;
+@@ -433,6 +471,7 @@ DebugEnd() ;
+ 
+         if (!p_loadLink)  {
+             p_data = FileLoad(p_resourceName, &size) ;
++            aa_fix_resource(NULL, (const char *)p_resourceName, p_data, size) ;
+ #ifdef RESOURCE_OUTPUT
+ printf("!A 1 file_%s\n", JustEnd(p_resourceName));
+ #endif
+@@ -556,6 +595,7 @@ printf("!A %ld lock_%s\n", p_resource->size, p_resource->p_resourceName) ;
+ 
+             /* Read it in. */
+             FileRead(file, p_resource->p_data, p_resource->size) ;
++            IAAFixLoaded(p_resource) ;
+             /* Viola! Done.  Mark it now as being in memory. */
+             p_resource->resourceType &= (~RESOURCE_ENTRY_TYPE_MASK_WHERE) ;
+             p_resource->resourceType |= RESOURCE_ENTRY_TYPE_MEMORY ;
+@@ -878,6 +918,7 @@ static T_resourceDirInfo *IDirLock(T_resource dir)
+                         file,
+                         &header,
+                         sizeof(header)) ;
++                    aa_fix_res_header(&header) ;
+ 
+                     /* This better be correct. */
+                     DebugCheck(header.uniqueID == RESOURCE_FILE_UNIQUE_ID) ;
+diff --git a/script.c b/script.c
+index 23a5506..e4f6dd7 100644
+--- a/script.c
++++ b/script.c
+@@ -146,7 +146,7 @@ typedef T_word16 (*T_scriptCommand)(
+ #define ScriptGetCodeByte(p_script, codeIndex)   \
+             ((p_script)->p_code[(codeIndex)])
+ #define ScriptGetCodeWord(p_script, codeIndex)   \
+-            (*((T_word16 *)(&((p_script)->p_code[(codeIndex)]))))
++            ((T_word16)AA_RD16LE(&((p_script)->p_code[(codeIndex)])))
+ 
+ #define ScriptInstanceGetHeader(p_inst)  ((p_inst)->p_header)
+ #define ScriptInstanceGetTag(p_inst)     ((p_inst)->instanceTag)
+@@ -790,6 +790,8 @@ static T_scriptHeader *IScriptLoad(T_word32 number)
+ 
+     /* Load the script. */
+     p_loaded = (T_byte8 *)FileLoad(filename, &size) ;
++    if (p_loaded != NULL)
++        aa_fix_script(p_loaded, size) ;
+ 
+ #ifdef TARGET_UNIX
+     p_script = NULL ;
+@@ -1397,14 +1399,14 @@ static T_scriptDataItem IScriptGetAny(
+             var.type = type ;
+             p_data = (ScriptGetCode(p_script) + *position) ;
+             p_number = (T_sword32 *)((T_sbyte8 *)p_data) ;
+-            var.ns.number = *((T_sword16 *)p_number) ;
++            var.ns.number = (T_sword16)AA_RD16LE(p_number) ;
+             *position += sizeof(T_sword16) ;
+             break ;
+         case SCRIPT_DATA_TYPE_32_BIT_NUMBER:
+             var.type = type ;
+             p_data = (ScriptGetCode(p_script) + *position) ;
+             p_number = (T_sword32 *)((T_sbyte8 *)p_data) ;
+-            var.ns.number = *((T_sword32 *)p_number) ;
++            var.ns.number = (T_sword32)AA_RD32LE(p_number) ;
+             *position += sizeof(T_sword32) ;
+             break ;
+         default:
